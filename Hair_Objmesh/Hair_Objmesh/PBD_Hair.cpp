@@ -121,7 +121,6 @@ void PBD_Hairstrand::ApplyExternalForces(float dt)
 void PBD_Hairstrand::DrawPoint()
 {
 	glPointSize(2.0f);
-	glColor3f(0.0f, 0.0f, 1.0f);
 	for (int i = 0; i < m_Count; i++)
 	{
 		auto p = getPos(i);
@@ -131,7 +130,23 @@ void PBD_Hairstrand::DrawPoint()
 	}
 }
 
+void PBD_Hairstrand::DrawLine()
+{
+	for (int i = 0; i < m_Count-1; i++)
+	{
+		auto p0 = getPos(i);
+		auto p1 = getPos(i + 1);
+		glBegin(GL_LINES);
+		glVertex3f(p0.GetX(), p0.GetY(), p0.GetZ());
+		glVertex3f(p1.GetX(), p1.GetY(), p1.GetZ());
+		glEnd();
+	}
+}
+
 void PBD_Hairstrand::Draw()
 {
+	glColor3f(1.0f, 0.0f, 0.0f);
 	DrawPoint();
+	glColor3f(0.802f, 0.515f, 0.332f);
+	DrawLine();
 }

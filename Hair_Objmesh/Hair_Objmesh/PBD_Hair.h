@@ -38,5 +38,6 @@ public:
 	//void SolveDihedralConstraint(int index0, int index1, float restAngle);
 	void ApplyExternalForces(float dt);
 	void DrawPoint();
+	void DrawLine();
 	void Draw();
 };

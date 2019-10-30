@@ -1,7 +1,7 @@
 #include "GL\glut.h"
 #include "meshLoader.h"
 #include "PBD_Hair.h"
-//#define LOAD_MESH
+#define LOAD_MESH
 
 bool pause = false;
 int mousePosition[2];
@@ -10,6 +10,8 @@ float matTrans[3];
 float matRotat[2];
 MeshLoader *mymeshLoader;
 PBD_Hairstrand *myHair;
+vector<PBD_Hairstrand*> myHairwisp;
+
 void Lighting()
 {
 	glShadeModel(GL_SMOOTH);
@@ -55,15 +57,29 @@ void Initialize()
 #ifdef LOAD_MESH
 	//LoadMesh
 	mymeshLoader = new MeshLoader();
-//	mymeshLoader->LoadMeshfile("./object/sphere_low.obj");
-	mymeshLoader->LoadMeshfile("./object/Sphere_6300.obj");
+	mymeshLoader->LoadMeshfile("./object/sphere_low.obj");
+//	mymeshLoader->LoadMeshfile("./object/Sphere_6300.obj");
 //	mymeshLoader->LoadMeshfile("./object/Sphere_12000.obj");
 	mymeshLoader->ComputeFaceNormal();
 	mymeshLoader->FindNeighborFaces();
 	mymeshLoader->ComputeVertexNormal();
 #endif
 	//Hair
-	myHair = new PBD_Hairstrand(10.0f, 20);
+	//myHair = new PBD_Hairstrand(10.0f, 20);
+
+	/*Vec3<float> InitPos(-10.0f, 5.0f, 0.0f);
+	for (int i = 0; i < 20; i++)
+	{
+		InitPos.SetX(InitPos.GetX() + 1.0f);
+		PBD_Hairstrand *h = new PBD_Hairstrand(InitPos, 5.0f, 10);
+		myHairwisp.push_back(h);
+	}*/
+	for (auto &v : mymeshLoader->vertexArray)
+	{
+		Vec3<float> InitPos = v.position;
+		PBD_Hairstrand *h = new PBD_Hairstrand(InitPos, 5.0f, 10);
+		myHairwisp.push_back(h);
+	}
 }
 
 void mouse(int btn, int state, int x, int y)
@@ -118,7 +134,11 @@ void keyboard(unsigned char key, int x, int y)
 	case 'r':
 	case 'R':
 		Init();
-		myHair->Init();
+		//myHair->Init();
+		for (auto &Hair : myHairwisp)
+		{
+			Hair->Init();
+		}
 		break;
 	case ' ':
 		pause = !pause;
@@ -139,7 +159,11 @@ void update(int value)
 {
 	if (!pause)
 	{
-		myHair->Simulation(0.02f);
+		//myHair->Simulation(0.02f);
+		for (auto &Hair : myHairwisp)
+		{
+			Hair->Simulation(0.02f);
+		}
 	}
 	glutPostRedisplay();
 	glutTimerFunc(1, update, 0);
@@ -147,6 +171,7 @@ void update(int value)
 
 void RenderMesh()
 {
+	glColor3f(0.8f, 0.8f, 0.8f);
 	for (auto &f : mymeshLoader->faceArray)
 	{
 		glBegin(GL_TRIANGLES);
@@ -173,7 +198,12 @@ void display()
 #ifdef LOAD_MESH
 	RenderMesh();
 #endif
-	myHair->Draw();
+	//glColor3f(0.0f, 0.0f, 1.0f);
+	//myHair->Draw();
+	for (auto &Hair : myHairwisp)
+	{
+		Hair->Draw();
+	}
 	/*glColor3f(0.0f, 1.0f, 0.0f);
 	glBegin(GL_TRIANGLES);
 	glVertex3f(-10.0f, 5.0f, 5.0f);
