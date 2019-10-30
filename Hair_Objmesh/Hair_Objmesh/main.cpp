@@ -1,6 +1,7 @@
 #include "GL\glut.h"
 #include "meshLoader.h"
-
+#include "PBD_Hair.h"
+//#define LOAD_MESH
 
 bool pause = false;
 int mousePosition[2];
@@ -8,11 +9,13 @@ unsigned int mouseBtnState[3];
 float matTrans[3];
 float matRotat[2];
 MeshLoader *mymeshLoader;
+PBD_Hairstrand *myHair;
 void Lighting()
 {
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
+	glEnable(GL_COLOR_MATERIAL);
 
 	float light_pos[] = { 25.0f, 50.0f, 50.0f, 0.0f };
 	float light_dir[] = { 0.0f, -1.0f, -1.0f };
@@ -35,7 +38,7 @@ void Lighting()
 	glMaterialfv(GL_FRONT, GL_DIFFUSE, frontColor);
 }
 
-void Initialize()
+void Init()
 {
 	glClearColor(0.9f, 0.9f, 0.9f, 1.0f);
 	mousePosition[0] = mousePosition[1] = 0;
@@ -43,13 +46,24 @@ void Initialize()
 	matTrans[0] = matTrans[1] = 0.0f;
 	matTrans[2] = -50.0f;
 	matRotat[0] = matRotat[1] = 0.0f;
+}
 
+void Initialize()
+{
+	Init();
+
+#ifdef LOAD_MESH
 	//LoadMesh
 	mymeshLoader = new MeshLoader();
-	mymeshLoader->LoadMeshfile("./object/sphere.obj");
+//	mymeshLoader->LoadMeshfile("./object/sphere_low.obj");
+	mymeshLoader->LoadMeshfile("./object/Sphere_6300.obj");
+//	mymeshLoader->LoadMeshfile("./object/Sphere_12000.obj");
 	mymeshLoader->ComputeFaceNormal();
 	mymeshLoader->FindNeighborFaces();
 	mymeshLoader->ComputeVertexNormal();
+#endif
+	//Hair
+	myHair = new PBD_Hairstrand(10.0f, 20);
 }
 
 void mouse(int btn, int state, int x, int y)
@@ -66,10 +80,10 @@ void mouse(int btn, int state, int x, int y)
 		mouseBtnState[1] = (state == GLUT_DOWN) ? 1 : 0;
 		break;
 	case 3:
-		matTrans[2] -= 1.0f;
+		matTrans[2] += 1.0f;
 		break;
 	case 4:
-		matTrans[2] += 1.0f;
+		matTrans[2] -= 1.0f;
 		break;
 	}
 }
@@ -84,8 +98,8 @@ void motion(int x, int y)
 	if (mouseBtnState[0])	//Left Btn
 	{
 		//Translation
-		matTrans[0] += 0.05f * (float)diffX;
-		matTrans[1] -= 0.05f * (float)diffY;
+		matTrans[0] += 0.01f * (float)diffX;
+		matTrans[1] -= 0.01f * (float)diffY;
 	}
 	else if (mouseBtnState[1])	//Right Btn
 	{
@@ -103,7 +117,8 @@ void keyboard(unsigned char key, int x, int y)
 	{
 	case 'r':
 	case 'R':
-		Initialize();
+		Init();
+		myHair->Init();
 		break;
 	case ' ':
 		pause = !pause;
@@ -122,10 +137,9 @@ void reshape(int w, int h)
 
 void update(int value)
 {
-	//
 	if (!pause)
 	{
-
+		myHair->Simulation(0.02f);
 	}
 	glutPostRedisplay();
 	glutTimerFunc(1, update, 0);
@@ -156,7 +170,16 @@ void display()
 	glRotatef(matRotat[1], 0.0f, 1.0f, 0.0f);
 	Lighting();
 	
+#ifdef LOAD_MESH
 	RenderMesh();
+#endif
+	myHair->Draw();
+	/*glColor3f(0.0f, 1.0f, 0.0f);
+	glBegin(GL_TRIANGLES);
+	glVertex3f(-10.0f, 5.0f, 5.0f);
+	glVertex3f(0.0f, 0.0f, 0.0f);
+	glVertex3f(0.0f, 0.0f, 5.0f);
+	glEnd();*/
 
 	glutSwapBuffers();
 }
