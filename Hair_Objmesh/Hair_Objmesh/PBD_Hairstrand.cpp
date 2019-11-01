@@ -1,4 +1,4 @@
-#include "PBD_Hair.h"
+#include "PBD_Hairstrand.h"
 #include "GL\glut.h"
 
 PBD_Hairstrand::PBD_Hairstrand()
@@ -42,15 +42,21 @@ void PBD_Hairstrand::Init()
 	for (int i = 0; i < m_Count; i++)
 	{
 		m_Mass[i] = 1.0f;
-		m_Pos[i].Set(m_InitPos.GetX() + (m_Length * i / (float)m_Count), m_InitPos.GetY() + 0.0f, m_InitPos.GetZ() + 0.0f);
+		m_Pos[i].Set(m_InitPos.GetX(), m_InitPos.GetY() + (m_Length * i / (float)m_Count) + 0.0f, m_InitPos.GetZ() + 0.0f);
 	}
 }
 
 void PBD_Hairstrand::Simulation(float dt)
 {
 	ApplyExternalForces(dt);
-	UpdateStructuralSprings();
-	UpdateBendSprings();
+	
+	int iter = 6;
+	for (int i = 0; i < iter; i++)
+	{
+		UpdateStructuralSprings();
+		UpdateBendSprings();
+		SolveCollisionConstraint(Vec3<float>(0.0f, 0.5f, 0.0f), 2.6f);
+	}
 	Integrate(dt);
 }
 
@@ -106,6 +112,22 @@ void PBD_Hairstrand::SolveDistanceConstraint(int index0, int index1, float restL
 	m_NewPos[index1] += delp2;
 }
 
+void PBD_Hairstrand::SolveCollisionConstraint(Vec3<float> center,float radius)
+{
+	for (int i = 0; i < m_Count; i++)
+	{
+		auto &q = m_NewPos[i];
+		auto v = q - center;
+		float distance = v.Length();
+		if (distance <= radius)
+		{
+			v.Normalize();
+			m_NewPos[i] = m_Pos[i];
+
+		}
+	}
+}
+
 void PBD_Hairstrand::ApplyExternalForces(float dt)
 {
 	Vec3<float> gravity(0.0f, -9.8f, 0.0f);
@@ -120,7 +142,7 @@ void PBD_Hairstrand::ApplyExternalForces(float dt)
 
 void PBD_Hairstrand::DrawPoint()
 {
-	glPointSize(2.0f);
+	glPointSize(3.0f);
 	for (int i = 0; i < m_Count; i++)
 	{
 		auto p = getPos(i);
@@ -149,4 +171,27 @@ void PBD_Hairstrand::Draw()
 	DrawPoint();
 	glColor3f(0.802f, 0.515f, 0.332f);
 	DrawLine();
+}
+
+void PBD_Hairstrand::ApplyWind(Vec3<float> wind)
+{
+	for (int i = 0; i < m_Count-1; i++)
+	{
+		//m_Vel[i] += wind;
+		ApplyWindForRope(wind, i, i + 1);
+	}
+}
+
+void PBD_Hairstrand::ApplyWindForRope(Vec3<float> wind, int index0, int index1)
+{
+	auto p0 = m_NewPos[index0];
+	auto p1 = m_NewPos[index1];
+
+	Vec3<float> dir = p1 - p0;
+	Vec3<float> normal = Vec3<float>(dir.GetY(), -dir.GetX(), 0.0f);
+
+	Vec3<float> force = normal * (normal.Dot(wind));
+
+	m_Vel[index0] += force;
+	m_Vel[index1] += force;
 }

@@ -1,9 +1,9 @@
 #include "GL\glut.h"
 #include "meshLoader.h"
-#include "PBD_Hair.h"
+#include "PBD_Hairstrand.h"
 #define LOAD_MESH
 
-bool pause = false;
+bool pause = true;
 int mousePosition[2];
 unsigned int mouseBtnState[3];
 float matTrans[3];
@@ -77,9 +77,26 @@ void Initialize()
 	for (auto &v : mymeshLoader->vertexArray)
 	{
 		Vec3<float> InitPos = v.position;
-		PBD_Hairstrand *h = new PBD_Hairstrand(InitPos, 5.0f, 10);
+		if (v.position.GetY() < 0.5f)
+			continue;
+		PBD_Hairstrand *h = new PBD_Hairstrand(InitPos, 5.0f, 20);
 		myHairwisp.push_back(h);
 	}
+	cout << myHairwisp.size() << endl;
+	//float R = 5.0f;
+	//for (int i = -R; i <= R; i++)
+	//{
+	//	for (int j = -R; j <= R; j++)
+	//	{
+	//		if ((float)i*(float)i + (float)j*(float)j == R*R)
+	//		{
+	//			Vec3<float> InitPos(i, 0.0f, j);
+	//			PBD_Hairstrand *h = new PBD_Hairstrand(InitPos, 20.0f, 100);
+	//			myHairwisp.push_back(h);
+	//		}
+	//	}
+	//}
+	
 }
 
 void mouse(int btn, int state, int x, int y)
@@ -127,13 +144,21 @@ void motion(int x, int y)
 	glutPostRedisplay();
 }
 
+void ApplyWindtoHair(Vec3<float> wind)
+{
+	for (auto &Hair : myHairwisp)
+	{
+		Hair->ApplyWind(wind);
+	}
+}
+
 void keyboard(unsigned char key, int x, int y)
 {
 	switch (key)
 	{
 	case 'r':
 	case 'R':
-		Init();
+		//Init();
 		//myHair->Init();
 		for (auto &Hair : myHairwisp)
 		{
@@ -142,6 +167,12 @@ void keyboard(unsigned char key, int x, int y)
 		break;
 	case ' ':
 		pause = !pause;
+		break;
+	case 'a':
+		ApplyWindtoHair(Vec3<float>(-10.0f, 0.0f, 0.0f));
+		break;
+	case 'd':
+		ApplyWindtoHair(Vec3<float>(10.0f, 0.0f, 0.0f));
 		break;
 	}
 }
@@ -183,6 +214,14 @@ void RenderMesh()
 	}
 }
 
+void RenderSphere()
+{
+	glPushMatrix();
+	glTranslatef(0.0f, 0.5f, 0.0f);
+	glutWireSphere(2.5f, 20.0f, 20.0f);
+	glPopMatrix();
+}
+
 void display()
 {
 	glEnable(GL_DEPTH_TEST);
@@ -198,6 +237,7 @@ void display()
 #ifdef LOAD_MESH
 	RenderMesh();
 #endif
+	//RenderSphere()
 	//glColor3f(0.0f, 0.0f, 1.0f);
 	//myHair->Draw();
 	for (auto &Hair : myHairwisp)

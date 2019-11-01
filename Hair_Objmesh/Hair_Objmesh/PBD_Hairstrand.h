@@ -35,9 +35,12 @@ public:
 	void UpdateStructuralSprings();
 	void UpdateBendSprings();
 	void SolveDistanceConstraint(int index0, int index1, float restLength);
+	void SolveCollisionConstraint(Vec3<float> center, float radius);
 	//void SolveDihedralConstraint(int index0, int index1, float restAngle);
 	void ApplyExternalForces(float dt);
 	void DrawPoint();
 	void DrawLine();
 	void Draw();
+	void ApplyWind(Vec3<float> wind);
+	void ApplyWindForRope(Vec3<float> wind, int index0, int index1);
 };
