@@ -24,6 +24,9 @@
     <ClCompile Include="PBD_Hairstrand.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PBD_Hair.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="meshLoader.h">
@@ -33,6 +36,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="PBD_Hairstrand.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PBD_Hair.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

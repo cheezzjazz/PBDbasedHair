@@ -1,3 +1,4 @@
+#include "GL\glut.h"
 #include "meshLoader.h"
 
 bool MeshLoader::LoadMeshfile(string filename)
@@ -68,6 +69,9 @@ bool MeshLoader::LoadMeshfile(string filename)
 	}
 
 	readFile.close();
+	ComputeFaceNormal();
+	FindNeighborFaces();
+	ComputeVertexNormal();
 	return true;
 }
 
@@ -111,6 +115,20 @@ void MeshLoader::ComputeVertexNormal()
 			v.normal += faceArray[i].normal;
 		}
 		v.normal /= v.neighborFaces.size();
+	}
+}
+
+void MeshLoader::RenderMesh()
+{
+	glColor3f(0.8f, 0.8f, 0.8f);
+	for (auto &f : faceArray)
+	{
+		glBegin(GL_TRIANGLES);
+		glNormal3f(f.normal.GetX(), f.normal.GetY(), f.normal.GetZ());
+		glVertex3f(f.v0.GetX(), f.v0.GetY(), f.v0.GetZ());
+		glVertex3f(f.v1.GetX(), f.v1.GetY(), f.v1.GetZ());
+		glVertex3f(f.v2.GetX(), f.v2.GetY(), f.v2.GetZ());
+		glEnd();
 	}
 }
 

@@ -1,16 +1,18 @@
 #include "GL\glut.h"
-#include "meshLoader.h"
-#include "PBD_Hairstrand.h"
+#include "PBD_Hair.h"
 #define LOAD_MESH
-
+//#define HAIR_STRAND
+//#define HAIR_WISP_CIRCLE
+//#define HAIR_WISP_LINE
 bool pause = true;
 int mousePosition[2];
 unsigned int mouseBtnState[3];
 float matTrans[3];
 float matRotat[2];
-MeshLoader *mymeshLoader;
-PBD_Hairstrand *myHair;
-vector<PBD_Hairstrand*> myHairwisp;
+PBD_Hair *myHair;
+//MeshLoader *mymeshLoader;
+//PBD_Hairstrand *myHair;
+//vector<PBD_Hairstrand*> myHairwisp;
 
 void Lighting()
 {
@@ -54,49 +56,23 @@ void Initialize()
 {
 	Init();
 
+
 #ifdef LOAD_MESH
 	//LoadMesh
-	mymeshLoader = new MeshLoader();
-	mymeshLoader->LoadMeshfile("./object/sphere_low.obj");
+	myHair = new PBD_Hair("./object/sphere_low.obj", 5.0f, 20);	//Hair mesh
+
 //	mymeshLoader->LoadMeshfile("./object/Sphere_6300.obj");
 //	mymeshLoader->LoadMeshfile("./object/Sphere_12000.obj");
-	mymeshLoader->ComputeFaceNormal();
-	mymeshLoader->FindNeighborFaces();
-	mymeshLoader->ComputeVertexNormal();
+#endif	
+#ifdef HAIR_STRAND
+	myHair = new PBD_Hair(10.0f, 20);	//Hair strand
 #endif
-	//Hair
-	//myHair = new PBD_Hairstrand(10.0f, 20);
-
-	/*Vec3<float> InitPos(-10.0f, 5.0f, 0.0f);
-	for (int i = 0; i < 20; i++)
-	{
-		InitPos.SetX(InitPos.GetX() + 1.0f);
-		PBD_Hairstrand *h = new PBD_Hairstrand(InitPos, 5.0f, 10);
-		myHairwisp.push_back(h);
-	}*/
-	for (auto &v : mymeshLoader->vertexArray)
-	{
-		Vec3<float> InitPos = v.position;
-		if (v.position.GetY() < 0.5f)
-			continue;
-		PBD_Hairstrand *h = new PBD_Hairstrand(InitPos, 5.0f, 20);
-		myHairwisp.push_back(h);
-	}
-	cout << myHairwisp.size() << endl;
-	//float R = 5.0f;
-	//for (int i = -R; i <= R; i++)
-	//{
-	//	for (int j = -R; j <= R; j++)
-	//	{
-	//		if ((float)i*(float)i + (float)j*(float)j == R*R)
-	//		{
-	//			Vec3<float> InitPos(i, 0.0f, j);
-	//			PBD_Hairstrand *h = new PBD_Hairstrand(InitPos, 20.0f, 100);
-	//			myHairwisp.push_back(h);
-	//		}
-	//	}
-	//}
-	
+#ifdef HAIR_WISP_CIRCLE
+	myHair = new PBD_Hair(20.0f, 100, 50.0f);	//Hair wisp circle
+#endif
+#ifdef HAIR_WISP_LINE
+	myHair = new PBD_Hair(5.0f, 10, 20);	//Hair wisp line
+#endif	
 }
 
 void mouse(int btn, int state, int x, int y)
@@ -144,14 +120,6 @@ void motion(int x, int y)
 	glutPostRedisplay();
 }
 
-void ApplyWindtoHair(Vec3<float> wind)
-{
-	for (auto &Hair : myHairwisp)
-	{
-		Hair->ApplyWind(wind);
-	}
-}
-
 void keyboard(unsigned char key, int x, int y)
 {
 	switch (key)
@@ -159,20 +127,16 @@ void keyboard(unsigned char key, int x, int y)
 	case 'r':
 	case 'R':
 		//Init();
-		//myHair->Init();
-		for (auto &Hair : myHairwisp)
-		{
-			Hair->Init();
-		}
+		myHair->Init();
 		break;
 	case ' ':
 		pause = !pause;
 		break;
 	case 'a':
-		ApplyWindtoHair(Vec3<float>(-10.0f, 0.0f, 0.0f));
+		myHair->ApplyWindtoHair(Vec3<float>(-10.0f, 0.0f, 0.0f));
 		break;
 	case 'd':
-		ApplyWindtoHair(Vec3<float>(10.0f, 0.0f, 0.0f));
+		myHair->ApplyWindtoHair(Vec3<float>(10.0f, 0.0f, 0.0f));
 		break;
 	}
 }
@@ -190,28 +154,10 @@ void update(int value)
 {
 	if (!pause)
 	{
-		//myHair->Simulation(0.02f);
-		for (auto &Hair : myHairwisp)
-		{
-			Hair->Simulation(0.02f);
-		}
+		myHair->Simulation(0.02f);
 	}
 	glutPostRedisplay();
 	glutTimerFunc(1, update, 0);
-}
-
-void RenderMesh()
-{
-	glColor3f(0.8f, 0.8f, 0.8f);
-	for (auto &f : mymeshLoader->faceArray)
-	{
-		glBegin(GL_TRIANGLES);
-		glNormal3f(f.normal.GetX(), f.normal.GetY(), f.normal.GetZ());
-		glVertex3f(f.v0.GetX(), f.v0.GetY(), f.v0.GetZ());
-		glVertex3f(f.v1.GetX(), f.v1.GetY(), f.v1.GetZ());
-		glVertex3f(f.v2.GetX(), f.v2.GetY(), f.v2.GetZ());
-		glEnd();
-	}
 }
 
 void RenderSphere()
@@ -234,22 +180,8 @@ void display()
 	glRotatef(matRotat[1], 0.0f, 1.0f, 0.0f);
 	Lighting();
 	
-#ifdef LOAD_MESH
-	RenderMesh();
-#endif
 	//RenderSphere()
-	//glColor3f(0.0f, 0.0f, 1.0f);
-	//myHair->Draw();
-	for (auto &Hair : myHairwisp)
-	{
-		Hair->Draw();
-	}
-	/*glColor3f(0.0f, 1.0f, 0.0f);
-	glBegin(GL_TRIANGLES);
-	glVertex3f(-10.0f, 5.0f, 5.0f);
-	glVertex3f(0.0f, 0.0f, 0.0f);
-	glVertex3f(0.0f, 0.0f, 5.0f);
-	glEnd();*/
+	myHair->Draw();
 
 	glutSwapBuffers();
 }

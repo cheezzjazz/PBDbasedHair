@@ -34,4 +34,6 @@ public:
 	void FindNeighborFaces();
 	void ComputeVertexNormal();
 
+public:
+	void RenderMesh();
 };

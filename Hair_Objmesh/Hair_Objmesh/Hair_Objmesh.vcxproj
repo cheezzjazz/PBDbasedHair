@@ -150,11 +150,13 @@
   <ItemGroup>
     <ClCompile Include="main.cpp" />
     <ClCompile Include="meshLoader.cpp" />
+    <ClCompile Include="PBD_Hair.cpp" />
     <ClCompile Include="PBD_Hairstrand.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\PBD\ACG_4,5\ACG_5\Adv_PBD\CameraNevigation\Vec3.h" />
     <ClInclude Include="meshLoader.h" />
+    <ClInclude Include="PBD_Hair.h" />
     <ClInclude Include="PBD_Hairstrand.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
